@@ -1,0 +1,29 @@
+name: Deploy To EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  Deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v3
+
+      - name: SSH to EC2 and Deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          script_stop: true
+          script: |
+            cd ~/githubActions_Practice
+            git pull origin main
+            chmod +x gradlew
+            ./gradlew build -x test
+            pkill -f 'java -jar' || true
+            nohup java -jar build/libs/demo-0.0.1-SNAPSHOT.jar > app.log 2>&1 &
