@@ -24,10 +24,16 @@ jobs:
             if [ ! -d "githubActions_Practice" ]; then
               git clone https://github.com/yangwoohyeon/githubActions_Practice.git
             fi
+
             cd githubActions_Practice
             git pull origin main
             chmod +x gradlew
             ./gradlew build -x test
+
+            # 기존 서버 종료
             pkill -f 'java -jar' || true
-            nohup java -jar build/libs/demo-0.0.1-SNAPSHOT.jar > app.log 2>&1 &
-            echo "Server started. Check app.log for output"
+
+            # 새 서버 백그라운드 실행 + 세션과 분리
+            nohup java -jar build/libs/demo-0.0.1-SNAPSHOT.jar > app.log 2>&1 & disown
+
+            echo "✅ Server restarted and detached successfully"
