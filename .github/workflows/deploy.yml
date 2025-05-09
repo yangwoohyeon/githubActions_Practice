@@ -19,26 +19,36 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_PRIVATE_KEY }}
+          port: 22
+          timeout: 30s
+          command_timeout: 10m
           script_stop: true
           script: |
+            # 1. 프로젝트가 없으면 clone
             if [ ! -d "githubActions_Practice" ]; then
               git clone https://github.com/yangwoohyeon/githubActions_Practice.git
             fi
 
+            # 2. 프로젝트 디렉토리 이동 후 최신 코드 pull
             cd githubActions_Practice
             git pull origin main
+
+            # 3. 빌드
             chmod +x gradlew
             ./gradlew build -x test
 
+            # 4. 기존 실행 중인 서버 종료
             pkill -f 'java -jar' || true
 
+            # 5. 디버깅 정보 출력
             echo "📂 현재 디렉토리: $(pwd)"
-            echo "📦 JAR 파일:"
+            echo "📦 JAR 파일 목록:"
             ls -al build/libs
 
-            # JAR 실행 (app.log 위치도 명시)
+            # 6. 새 서버 실행
             nohup java -jar build/libs/demo-0.0.1-SNAPSHOT.jar > build/libs/app.log 2>&1 & disown
 
+            # 7. 확인용 출력
             sleep 3
             echo "📄 서버 프로세스 확인:"
             ps -ef | grep java
@@ -46,6 +56,8 @@ jobs:
             echo "📄 로그 출력:"
             tail -n 20 build/libs/app.log || echo "❌ 로그가 없습니다."
 
+            echo "🌐 서버 응답 확인:"
             curl -s http://localhost:8080 || echo "❌ 서버 응답 없음"
-            exit 0
-          
+
+            # 8. 항상 성공으로 종료 (143 방지)
+            true
