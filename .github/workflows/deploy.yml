@@ -21,9 +21,13 @@ jobs:
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           script_stop: true
           script: |
-            cd ~/githubActions_Practice
+            if [ ! -d "githubActions_Practice" ]; then
+              git clone https://github.com/yangwoohyeon/githubActions_Practice.git
+            fi
+            cd githubActions_Practice
             git pull origin main
             chmod +x gradlew
             ./gradlew build -x test
             pkill -f 'java -jar' || true
             nohup java -jar build/libs/demo-0.0.1-SNAPSHOT.jar > app.log 2>&1 &
+            echo "Server started. Check app.log for output"
