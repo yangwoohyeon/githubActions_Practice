@@ -30,10 +30,22 @@ jobs:
             chmod +x gradlew
             ./gradlew build -x test
 
-            # 기존 서버 종료
             pkill -f 'java -jar' || true
 
-            # 새 서버 백그라운드 실행 + 세션과 분리
-            nohup java -jar build/libs/demo-0.0.1-SNAPSHOT.jar > app.log 2>&1 & disown
+            echo "📂 현재 디렉토리: $(pwd)"
+            echo "📦 JAR 파일:"
+            ls -al build/libs
 
-            echo "✅ Server restarted and detached successfully"
+            # JAR 실행 (app.log 위치도 명시)
+            nohup java -jar build/libs/demo-0.0.1-SNAPSHOT.jar > build/libs/app.log 2>&1 & disown
+
+            sleep 3
+            echo "📄 서버 프로세스 확인:"
+            ps -ef | grep java
+
+            echo "📄 로그 출력:"
+            tail -n 20 build/libs/app.log || echo "❌ 로그가 없습니다."
+
+            curl -s http://localhost:8080 || echo "❌ 서버 응답 없음"
+            exit 0
+          
